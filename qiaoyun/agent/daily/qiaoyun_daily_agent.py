@@ -15,7 +15,6 @@ logger = getLogger(__name__)
 
 from framework.agent.base_agent import AgentStatus, BaseAgent
 from conf.config import CONF
-from volcenginesdkarkruntime import Ark
 from framework.tool.search.aliyun import aliyun_search
 from qiaoyun.agent.daily.qiaoyun_daily_learning_agent import QiaoyunDailyLearningAgent
 from qiaoyun.agent.daily.qiaoyun_daily_script_agent import QiaoyunDailyScriptAgent

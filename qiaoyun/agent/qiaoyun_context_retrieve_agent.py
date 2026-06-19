@@ -13,9 +13,8 @@ logger = getLogger(__name__)
 
 from framework.agent.base_agent import AgentStatus, BaseAgent
 from conf.config import CONF
-from volcenginesdkarkruntime import Ark
 from dao.mongo import MongoDBBase
-from util.embedding_util import embedding_by_aliyun
+from util.embedding_util import embedding
 
 
 class QiaoyunContextRetrieveAgent(BaseAgent):
@@ -36,7 +35,7 @@ class QiaoyunContextRetrieveAgent(BaseAgent):
 
         # 角色全局人物设定
         if q["CharacterSettingQueryQuestion"] != "空":
-            emb_CharacterSettingQueryQuestion = embedding_by_aliyun(q["CharacterSettingQueryQuestion"])
+            emb_CharacterSettingQueryQuestion = embedding(q["CharacterSettingQueryQuestion"])
             results = mongo.vector_search(
                 "embeddings",
                 query_embedding=emb_CharacterSettingQueryQuestion,
@@ -94,7 +93,7 @@ class QiaoyunContextRetrieveAgent(BaseAgent):
         # 角色个人设定
         merged_results = {}
         if q["CharacterSettingQueryQuestion"] != "空":
-            emb_CharacterSettingQueryQuestion = embedding_by_aliyun(q["CharacterSettingQueryQuestion"])
+            emb_CharacterSettingQueryQuestion = embedding(q["CharacterSettingQueryQuestion"])
             results = mongo.vector_search(
                 "embeddings",
                 query_embedding=emb_CharacterSettingQueryQuestion,
@@ -156,7 +155,7 @@ class QiaoyunContextRetrieveAgent(BaseAgent):
         # 用户个人设定
         merged_results = {}
         if q["UserProfileQueryQuestion"] != "空":
-            emb_CharacterSettingQueryQuestion = embedding_by_aliyun(q["UserProfileQueryQuestion"])
+            emb_CharacterSettingQueryQuestion = embedding(q["UserProfileQueryQuestion"])
             results = mongo.vector_search(
                 "embeddings",
                 query_embedding=emb_CharacterSettingQueryQuestion,
@@ -218,7 +217,7 @@ class QiaoyunContextRetrieveAgent(BaseAgent):
         # 角色相册
         merged_results = {}
         if q["CharacterPhotoQueryQuestion"] != "空":
-            emb_CharacterSettingQueryQuestion = embedding_by_aliyun(q["CharacterPhotoQueryQuestion"])
+            emb_CharacterSettingQueryQuestion = embedding(q["CharacterPhotoQueryQuestion"])
             results = mongo.vector_search(
                 "embeddings",
                 query_embedding=emb_CharacterSettingQueryQuestion,
@@ -291,7 +290,7 @@ class QiaoyunContextRetrieveAgent(BaseAgent):
         # 角色知识
         merged_results = {}
         if q["CharacterKnowledgeQueryQuestion"] != "空":
-            emb_CharacterSettingQueryQuestion = embedding_by_aliyun(q["CharacterKnowledgeQueryQuestion"])
+            emb_CharacterSettingQueryQuestion = embedding(q["CharacterKnowledgeQueryQuestion"])
             results = mongo.vector_search(
                 "embeddings",
                 query_embedding=emb_CharacterSettingQueryQuestion,

@@ -1,7 +1,8 @@
 {
     "aliyun": {
         "characters": {
-            "qiaoyun": "qiaoyun_id"
+            "qiaoyun": "qiaoyun_id",
+            "xiaoyun": "xiaoyun_id"
         }
     },
     "ecloud": {
@@ -19,11 +20,40 @@
         "AccessKey": "AccessKey",
         "SecretKey": "SecretKey"
     },
+    "llm": {
+        "provider": "ark"
+    },
     "doubao_models": {
         "deepseek_r1": "xxx",
         "deepseek_v3.1": "xxx",
         "doubao_1.5_pro": "xxx",
         "doubao_1.6_pro": "xxx"
+    },
+    "openai_compatible": {
+        "base_url": "https://api.siliconflow.cn/v1",
+        "api_key_env": "SILICONFLOW_API_KEY",
+        "api_key": ""
+    },
+    "siliconflow_models": {
+        "deepseek_r1": "deepseek-ai/DeepSeek-R1",
+        "deepseek_v3.1": "deepseek-ai/DeepSeek-V3",
+        "doubao_1.5_pro": "Qwen/Qwen2.5-72B-Instruct",
+        "doubao_1.6_pro": "Qwen/Qwen2.5-72B-Instruct"
+    },
+    "embedding": {
+        "provider": "aliyun",
+        "model": "BAAI/bge-m3"
+    },
+    "rerank": {
+        "provider": "openai_compatible",
+        "model": "BAAI/bge-reranker-v2-m3"
+    },
+    "tts": {
+        "provider": "openai_compatible",
+        "model": "FunAudioLLM/CosyVoice2-0.5B",
+        "voice": "FunAudioLLM/CosyVoice2-0.5B:anna",
+        "response_format": "wav",
+        "speed": 1.0
     },
     "aliyun_asr": {
         "URL": "wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1",
@@ -44,5 +74,9 @@
         "environment_name": "development",
         "enable_poll_fallback": false,
         "poll_interval_seconds": 30
+    },
+    "characters": {
+        "qiaoyun": "qiaoyun_id",
+        "xiaoyun": "xiaoyun_id"
     }
 }

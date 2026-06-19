@@ -194,14 +194,8 @@ class BaseSingleRoundLLMAgent(BaseAgent):
         # Process the response based on whether function call was used
         if self.output_schema:
             try:
-                if response.choices[0].message.function_call:
-                    # Extract and parse the function call arguments
-                    function_args = response.choices[0].message.function_call.arguments
-                    parsed_result = json.loads(function_args)
-                    return parsed_result
-                else:
-                    parsed_result = json.loads(response.choices[0].message.content)
-                    return parsed_result
+                raw_arguments = self._extract_structured_arguments(response.choices[0].message)
+                return json.loads(raw_arguments)
             except json.JSONDecodeError as e:
                     logger.error(f"Agent {self.name}: Failed to parse function call result: {e}")
                     # Let the exception propagate
@@ -209,6 +203,34 @@ class BaseSingleRoundLLMAgent(BaseAgent):
         else:
             # Return the content directly if no function call was used
             return response.choices[0].message.content
+
+    @staticmethod
+    def _extract_structured_arguments(message) -> str:
+        """
+        Extract the structured-output JSON string from a chat completion message,
+        compatible with multiple OpenAI-style response shapes:
+          1. Standard OpenAI / OpenAI-compatible (e.g. SiliconFlow): message.tool_calls[0].function.arguments
+          2. Legacy function-calling (e.g. Volcengine Ark / Doubao): message.function_call.arguments
+          3. Fallback: raw message.content (optionally wrapped in a ```json fenced block)
+        """
+        # 1. Standard tool_calls (OpenAI-compatible services return this)
+        tool_calls = getattr(message, "tool_calls", None)
+        if tool_calls:
+            return tool_calls[0].function.arguments
+
+        # 2. Legacy function_call (kept for backward compatibility with Ark/Doubao)
+        function_call = getattr(message, "function_call", None)
+        if function_call:
+            return function_call.arguments
+
+        # 3. Fallback: parse content directly, tolerating ```json ... ``` fences
+        content = (message.content or "").strip()
+        if content.startswith("```"):
+            content = content.split("\n", 1)[-1] if "\n" in content else content
+            content = content.rstrip("`").strip()
+            if content.lower().startswith("json"):
+                content = content[4:].strip()
+        return content
     
     def _handle_streaming_response(
         self, 
@@ -244,19 +266,28 @@ class BaseSingleRoundLLMAgent(BaseAgent):
         # Process the streaming response
         for chunk in stream:
             delta = chunk.choices[0].delta
-            
-            # Check if this is a function call response
-            if hasattr(delta, 'function_call') and delta.function_call:
+
+            # Standard tool_calls streaming (OpenAI-compatible services, e.g. SiliconFlow)
+            if getattr(delta, "tool_calls", None):
                 is_function_call = True
-                
+                tool_call = delta.tool_calls[0]
+                if getattr(tool_call, "function", None) and tool_call.function.arguments:
+                    function_args_collector += tool_call.function.arguments
+                    self.context["llm_streaming_response"] = function_args_collector
+                    yield self._get_state()
+
+            # Legacy function_call streaming (kept for backward compatibility with Ark/Doubao)
+            elif hasattr(delta, 'function_call') and delta.function_call:
+                is_function_call = True
+
                 # Extract and accumulate function call arguments
                 if hasattr(delta.function_call, 'arguments') and delta.function_call.arguments:
                     function_args_collector += delta.function_call.arguments
-                    
+
                     # Update context with current state and yield it
                     self.context["llm_streaming_response"] = function_args_collector
                     yield self._get_state()
-            
+
             # Handle regular content
             elif hasattr(delta, 'content') and delta.content:
                 content_collector += delta.content

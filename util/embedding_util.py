@@ -12,6 +12,7 @@ import traceback
 import dashscope
 from http import HTTPStatus
 from dao.mongo import MongoDBBase
+from conf.config import CONF
 
 def embedding_by_aliyun(text, model="text-embedding-v3"):
     resp = dashscope.TextEmbedding.call(
@@ -22,11 +23,21 @@ def embedding_by_aliyun(text, model="text-embedding-v3"):
         return output["embeddings"][0]["embedding"]
     else:
         return None
-    
+
+
+def embedding(text, model=None):
+    """按 conf.embedding.provider 选择 embedding 后端，写入与检索须用同一实现。"""
+    provider = (CONF.get("embedding", {}) or {}).get("provider", "aliyun")
+    if provider == "openai_compatible":
+        from framework.tool.embedding.openai_compatible_embedding import embedding_by_openai_compatible
+        return embedding_by_openai_compatible(text, model=model)
+    return embedding_by_aliyun(text, model=model or "text-embedding-v3")
+
+
 def upsert_one(key, value, metadata, collection_name="embeddings"):
     mongo = MongoDBBase()
-    key_embedding = embedding_by_aliyun(key)
-    value_embedding = embedding_by_aliyun(value)
+    key_embedding = embedding(key)
+    value_embedding = embedding(value)
     if "type" not in metadata:
         metadata["type"] = "character_global"
 
