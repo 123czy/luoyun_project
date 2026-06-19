@@ -32,7 +32,7 @@ from util.time_util import date2str, timestamp2str
 target_user_alias = "qiaoyun"
 target_user_id = CONF["characters"][target_user_alias]
 
-platform = "wechat"
+platform = os.getenv("LUOYUN_PLATFORM", "wechat")
 typing_speed = 2.2
 max_conversation_round = 50
 descrease_frequency = 30240 # 多少秒降低一次关系数值
@@ -169,10 +169,15 @@ def handle_proactive_message():
                         continue
                     user = user_dao.get_user_by_id(relation["uid"])
                     character = user_dao.get_user_by_id(relation["cid"])
+                    if (
+                        platform not in user.get("platforms", {})
+                        or platform not in character.get("platforms", {})
+                    ):
+                        continue
                     conversation = conversation_dao.get_private_conversation(
-                        "wechat",
-                        user["platforms"]["wechat"]["id"],
-                        character["platforms"]["wechat"]["id"],
+                        platform,
+                        user["platforms"][platform]["id"],
+                        character["platforms"][platform]["id"],
                     )
                     if conversation is None:
                         continue
@@ -240,12 +245,16 @@ def handle_pending_future_message():
         logger.info("try sending proactive message:" + str(conversation["conversation_info"]["future"]))
 
         users = user_dao.find_users({
-            "platforms.wechat.id": conversation["talkers"][0]["id"]
+            f"platforms.{platform}.id": conversation["talkers"][0]["id"]
         }, 1)
+        if len(users) == 0:
+            return
         user = users[0]
         characters = user_dao.find_users({
-            "platforms.wechat.id": conversation["talkers"][1]["id"]
+            f"platforms.{platform}.id": conversation["talkers"][1]["id"]
         }, 1)
+        if len(characters) == 0:
+            return
         character = characters[0]
 
         conversation_id = str(conversation["_id"])

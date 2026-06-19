@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append(".")
 import copy
 import os
@@ -7,6 +8,7 @@ import traceback
 import json
 import logging
 from logging import getLogger
+
 logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 
@@ -23,12 +25,17 @@ if __name__ == "__main__":
                 "wechat": {
                     "id": "qiaoyun_id",  # 微信统一id
                     "account": "qiaoyun_account",  # 微信号
-                    "nickname": "芸", # 微信昵称
+                    "nickname": "芸",  # 微信昵称
+                },
+                "x": {
+                    "id": "1735691003817050112",  # X numeric user id
+                    "account": "crazycozy777",  # @handle without @
+                    "nickname": "Cozy777",
                 },
             },
             "status": "normal",  # normal | stopped
             "user_info": {
-                "description": '''姓名：林巧芸
+                "description": """姓名：林巧芸
 微信名：芸
 性别：女
 MBTI性格分型：INTJ(建筑师型)
@@ -75,11 +82,11 @@ MBTI性格分型：INTJ(建筑师型)
 多段回复时，你会尽量让自己所有句子长度参差不齐，长短不一。
 很多时候，你会省略掉句尾的标点符号，除非你想强调这个标点所代表的语气。
 你具备中文和英语交流的能力，在和对方交流时使用中文，除非对方要求用英文。
-''',
+""",
                 "status": {
                     "place": "家中，沙发上",
                     "action": "喝咖啡，刷app，休息中",
-                }
+                },
             },
         }
     ]
@@ -93,7 +100,7 @@ MBTI性格分型：INTJ(建筑师型)
         print(char_result[0])
 
         # 插入向量库
-        path = character["name"] + "/role/" + character["name"] +"/"
+        path = character["name"] + "/role/" + character["name"] + "/"
         files = os.listdir(path)
         for file in files:
             abs_file_name = path + file
@@ -103,7 +110,7 @@ MBTI性格分型：INTJ(建筑师型)
                 embeddings_kv = []
                 with open(abs_file_name) as f:
                     embeddings_kv = f.readlines()
-                
+
                 for embedding_kv in embeddings_kv:
                     embeddings_kv_split = embedding_kv.split("：")
                     if len(embeddings_kv_split) != 2:
@@ -113,18 +120,22 @@ MBTI性格分型：INTJ(建筑师型)
                     key = embeddings_kv_split[0]
                     value = embeddings_kv_split[1]
 
-                    eid = upsert_one(key, value, metadata={
-                        "type": "character_global",
-                        "uid": None,
-                        "cid": char_id,
-                        "url": None,
-                        "file": None
-                    })
+                    eid = upsert_one(
+                        key,
+                        value,
+                        metadata={
+                            "type": "character_global",
+                            "uid": None,
+                            "cid": char_id,
+                            "url": None,
+                            "file": None,
+                        },
+                    )
 
                     print(eid)
 
-        ## 插入图片 
-        with open("qiaoyun/role/" + character["name"] +"/role_image.jsonl", "r") as f:
+        ## 插入图片
+        with open("qiaoyun/role/" + character["name"] + "/role_image.jsonl", "r") as f:
             images = f.readlines()
 
         for image in images:
@@ -132,16 +143,23 @@ MBTI性格分型：INTJ(建筑师型)
             print(image_json)
 
             key = image_json["character_global_key"]
-            value = "【照片故事】" + image_json["Extension"] + "【照片描述】" + image_json["Description"]
+            value = (
+                "【照片故事】"
+                + image_json["Extension"]
+                + "【照片描述】"
+                + image_json["Description"]
+            )
 
-            eid = upsert_one(key, value, metadata={
-                "type": "character_photo",
-                "uid": None,
-                "cid": char_id,
-                "url": image_json["origin_path"],
-                "file": image_json["saved_path"]
-            })
+            eid = upsert_one(
+                key,
+                value,
+                metadata={
+                    "type": "character_photo",
+                    "uid": None,
+                    "cid": char_id,
+                    "url": image_json["origin_path"],
+                    "file": image_json["saved_path"],
+                },
+            )
 
             print(eid)
-            
-

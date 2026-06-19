@@ -29,5 +29,20 @@
         "URL": "wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1",
         "APPKEY": "APPKEY"
     },
-    "admin_user_id": "admin_user_id"
+    "admin_user_id": "admin_user_id",
+    "x": {
+        "api_key": "your_x_api_key",
+        "api_secret": "your_x_api_secret",
+        "access_token": "your_x_access_token",
+        "access_token_secret": "your_x_access_token_secret",
+        "character_name": "qiaoyun",
+        "input_mode": "poll",
+        "webhook_host": "0.0.0.0",
+        "webhook_port": 8081,
+        "webhook_path": "/x/webhook",
+        "webhook_public_url": "https://your-domain.com/x/webhook",
+        "environment_name": "development",
+        "enable_poll_fallback": false,
+        "poll_interval_seconds": 30
+    }
 }

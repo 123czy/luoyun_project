@@ -31,7 +31,7 @@ max_handle_age = 3600 * 12 # 只处理12小时以内的消息
 target_user_alias = "qiaoyun"
 target_user_id = CONF["characters"][target_user_alias]
 
-platform = "wechat"
+platform = os.getenv("LUOYUN_PLATFORM", "wechat")
 typing_speed = 2.2
 max_conversation_round = 50
 
@@ -39,6 +39,24 @@ conversation_dao = ConversationDAO()
 user_dao = UserDAO()
 lock_manager = MongoDBLockManager()
 mongo = MongoDBBase()
+
+def build_output_metadata(input_messages, metadata=None):
+    merged = dict(metadata or {})
+    if platform == "x":
+        for input_message in reversed(input_messages):
+            tweet_id = (input_message.get("metadata") or {}).get("tweet_id")
+            if tweet_id:
+                merged["in_reply_to_tweet_id"] = tweet_id
+                break
+    return merged
+
+def send_reply(context, input_messages, **kwargs):
+    metadata = kwargs.pop("metadata", {})
+    return send_message_via_context(
+        context,
+        metadata=build_output_metadata(input_messages, metadata),
+        **kwargs,
+    )
 
 async def main_handler():
     input_messages = []
@@ -98,8 +116,9 @@ async def main_handler():
 
         # 处理拉黑逻辑
         if context["relation"]["relationship"]["dislike"] >= 100:
-            outputmessage = send_message_via_context(
+            outputmessage = send_reply(
                 context,
+                input_messages,
                 message="[系统消息]已拉黑，如需恢复请联系作者LeanInWind",
                 message_type="text",
                 expect_output_timestamp = int(time.time())
@@ -109,8 +128,9 @@ async def main_handler():
         # 处理硬指令
         elif str(context["user"]["_id"]) == CONF["admin_user_id"] and str(input_messages[0]["message"]).startswith(supported_hardcode):
             handle_hardcode(context, input_messages[0]["message"])
-            outputmessage = send_message_via_context(
+            outputmessage = send_reply(
                 context,
+                input_messages,
                 message="ok",
                 message_type="text",
                 expect_output_timestamp = int(time.time())
@@ -175,8 +195,9 @@ async def main_handler():
                             for voice_url, voice_length in voice_messages:
                                 if multimodal_responses_index > 1:
                                     expect_output_timestamp = expect_output_timestamp + int(voice_length/1000) + random.randint(2,5)
-                                outputmessage = send_message_via_context(
+                                outputmessage = send_reply(
                                     context,
+                                    input_messages,
                                     message=multimodal_response["content"],
                                     message_type="voice",
                                     expect_output_timestamp = expect_output_timestamp,
@@ -205,8 +226,9 @@ async def main_handler():
                                 
                                 if multimodal_responses_index > 1:
                                     expect_output_timestamp = expect_output_timestamp + random.randint(2, 8)
-                                outputmessage = send_message_via_context(
+                                outputmessage = send_reply(
                                     context,
+                                    input_messages,
                                     message=multimodal_response["content"],
                                     message_type="image",
                                     expect_output_timestamp = expect_output_timestamp,
@@ -225,8 +247,9 @@ async def main_handler():
                             text_message = str(multimodal_response["content"]).replace("<换行>", "\n")
                             if multimodal_responses_index > 1:
                                 expect_output_timestamp = expect_output_timestamp + int(len(text_message)/typing_speed)
-                            outputmessage = send_message_via_context(
+                            outputmessage = send_reply(
                                 context,
+                                input_messages,
                                 message=text_message,
                                 message_type="text",
                                 expect_output_timestamp = expect_output_timestamp

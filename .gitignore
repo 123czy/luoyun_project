@@ -6,6 +6,15 @@ myenv/
 luoyun/temp/
 qiaoyun/temp/
 
+# Secrets and local runtime config
+conf/config.json
+deploy.env
+connector/x/*.pid
+qiaoyun/runner/*.pid
+connector/ecloud/*.log
+connector/x/*.log
+qiaoyun/runner/*.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
