@@ -12,9 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = getLogger(__name__)
 
 from framework.agent.base_agent import AgentStatus
-from framework.agent.llmagent.doubao_llmagent import DouBaoLLMAgent
+from framework.agent.llmagent.luoyun_llmagent import LuoyunLLMAgent, default_llm_client
 from conf.config import CONF
-from volcenginesdkarkruntime import Ark
 
 from dao.mongo import MongoDBBase
 from util.embedding_util import upsert_one
@@ -24,12 +23,7 @@ from qiaoyun.prompt.chat_taskprompt import *
 from qiaoyun.prompt.chat_contextprompt import *
 from qiaoyun.prompt.chat_noticeprompt import *
 
-doubao_client = Ark(
-    base_url="https://ark.cn-beijing.volces.com/api/v3",
-)
-
-# 需要 export ARK_API_KEY="xxxx"
-class QiaoyunPostAnalyzeAgent(DouBaoLLMAgent):
+class QiaoyunPostAnalyzeAgent(LuoyunLLMAgent):
     default_systemp_template = SYSTEMPROMPT_小说越狱
 
     default_userp_template = \
@@ -114,7 +108,7 @@ class QiaoyunPostAnalyzeAgent(DouBaoLLMAgent):
         }
     }
 
-    def __init__(self, context=None, client=doubao_client, systemp_template=default_systemp_template, userp_template=default_userp_template, output_schema=default_output_schema, default_input=None, max_retries=3, name=None, stream=False, model="doubao_1.5_pro", extra_args=None):
+    def __init__(self, context=None, client=default_llm_client, systemp_template=default_systemp_template, userp_template=default_userp_template, output_schema=default_output_schema, default_input=None, max_retries=3, name=None, stream=False, model="doubao_1.5_pro", extra_args=None):
         super().__init__(context, client, systemp_template, userp_template, output_schema, default_input, max_retries, name, stream, model, extra_args)
 
     def _posthandle(self):
@@ -151,7 +145,7 @@ class QiaoyunPostAnalyzeAgent(DouBaoLLMAgent):
         if self.resp["CharacterKnowledges"] != "无":
             splits = self.resp["CharacterKnowledges"].split("<换行>")
             for split in splits:
-                upsert_vector(split, "chatacter_knowledge")
+                upsert_vector(split, "character_knowledge")
         if self.resp["UserSettings"] != "无":
             splits = self.resp["UserSettings"].split("<换行>")
             for split in splits:

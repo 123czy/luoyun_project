@@ -23,6 +23,7 @@ from qiaoyun.runner.context import context_prepare
 from qiaoyun.util.message_util import send_message_via_context
 from qiaoyun.agent.background.qiaoyun_future_message_agent import QiaoyunFutureMessageAgent
 from qiaoyun.agent.daily.qiaoyun_daily_agent import QiaoyunDailyAgent
+from framework.tool.search.aliyun import is_search_available
 
 from qiaoyun.tool.voice import qiaoyun_voice
 from qiaoyun.tool.image import upload_image
@@ -43,6 +44,7 @@ conversation_dao = ConversationDAO()
 user_dao = UserDAO()
 lock_manager = MongoDBLockManager()
 mongo = MongoDBBase()
+_daily_agent_skip_logged = False
 
 async def background_handler():
     is_decrease = False
@@ -63,26 +65,35 @@ async def background_handler():
     # 处理状态
     handle_status()
 
-    # 生成每日脚本
+    # 生成每日脚本（需阿里百炼联网搜索；本地纯文字测试可关闭 search.enabled）
+    global _daily_agent_skip_logged
     target_timestamp = int(time.time()) + 7200
     target_date = date2str(target_timestamp)
     find = mongo.find_one("dailynews", {"date": target_date, "cid": target_user_id})
     if find is None:
-        logger.info("run daily agent...")
-        character = user_dao.get_user_by_id(target_user_id)
-        context = {
-            "target_timestamp": target_timestamp,
-            "character": character,
-            "time_str": timestamp2str(target_timestamp, week=True),
-            "date_str": date2str(target_timestamp, week=True)
-        }
+        if not is_search_available():
+            if not _daily_agent_skip_logged:
+                logger.info(
+                    "skip daily agent: search disabled or DASHSCOPE_API_KEY not set "
+                    "(does not affect main chat; set search.enabled=true + DASHSCOPE_API_KEY to enable)"
+                )
+                _daily_agent_skip_logged = True
+        else:
+            logger.info("run daily agent...")
+            character = user_dao.get_user_by_id(target_user_id)
+            context = {
+                "target_timestamp": target_timestamp,
+                "character": character,
+                "time_str": timestamp2str(target_timestamp, week=True),
+                "date_str": date2str(target_timestamp, week=True)
+            }
 
-        c = QiaoyunDailyAgent(context)
-        results = c.run()
-        for result in results:
-            if result["status"] != AgentStatus.FINISHED.value:
-                continue
-            logger.info(result["resp"])
+            c = QiaoyunDailyAgent(context)
+            results = c.run()
+            for result in results:
+                if result["status"] != AgentStatus.FINISHED.value:
+                    continue
+                logger.info(result["resp"])
     
     # 尝试主动消息
     if is_proactive:

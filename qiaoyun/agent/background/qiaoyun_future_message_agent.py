@@ -14,7 +14,6 @@ logger = getLogger(__name__)
 
 from framework.agent.base_agent import AgentStatus, BaseAgent
 from conf.config import CONF
-from volcenginesdkarkruntime import Ark
 
 # from qiaoyun.agent.qiaoyun_query_rewrite_agent import QiaoyunQueryRewriteAgent
 from qiaoyun.agent.background.qiaoyun_future_query_rewrite_agent import QiaoyunFutureQueryRewriteAgent

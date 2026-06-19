@@ -16,11 +16,20 @@ from framework.agent.llmagent.base_singleroundllmagent import BaseSingleRoundLLM
 from conf.config import CONF
 from volcenginesdkarkruntime import Ark
 
-doubao_client = Ark(
-    base_url="https://ark.cn-beijing.volces.com/api/v3",
-)
+def build_doubao_client():
+    api_key = os.getenv("ARK_API_KEY")
+    if not api_key:
+        logger.warning(
+            "ARK_API_KEY not configured; Ark client built with a placeholder. "
+            "Live calls will fail until ARK_API_KEY is set (conf.llm.provider=ark)."
+        )
+        api_key = "EMPTY"
+    return Ark(
+        base_url="https://ark.cn-beijing.volces.com/api/v3",
+        api_key=api_key,
+    )
 
-# 需要 export ARK_API_KEY="xxxx"
+doubao_client = build_doubao_client()
 class DouBaoLLMAgent(BaseSingleRoundLLMAgent):
     def __init__(self, context = None, client=doubao_client, systemp_template = "", userp_template = "", output_schema = None, default_input = None, max_retries = 3, name = None, stream = False, model = "doubao_1.5_pro", extra_args = None):
         super().__init__(context, client, systemp_template, userp_template, output_schema, default_input, max_retries, name, stream, model, extra_args)

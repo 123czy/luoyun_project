@@ -14,9 +14,8 @@ import random
 import json
 
 from framework.agent.base_agent import AgentStatus
-from framework.agent.llmagent.doubao_llmagent import DouBaoLLMAgent
+from framework.agent.llmagent.luoyun_llmagent import LuoyunLLMAgent, default_llm_client
 from conf.config import CONF
-from volcenginesdkarkruntime import Ark
 
 from qiaoyun.prompt.system_prompt import *
 from qiaoyun.prompt.chat_taskprompt import *
@@ -26,12 +25,7 @@ from qiaoyun.prompt.image_prompt import *
 
 from util.time_util import timestamp2str
 
-doubao_client = Ark(
-    base_url="https://ark.cn-beijing.volces.com/api/v3",
-)
-
-# 需要 export ARK_API_KEY="xxxx"
-class QiaoyunImageAnalyzeAgent(DouBaoLLMAgent):
+class QiaoyunImageAnalyzeAgent(LuoyunLLMAgent):
     default_systemp_template = SYSTEMPROMPT_绘图
 
     default_userp_template = \
@@ -49,7 +43,7 @@ class QiaoyunImageAnalyzeAgent(DouBaoLLMAgent):
     "## 注意事项" + "\n" + \
     IMAGEPROMPT_绘图任务_推理_注意事项
 
-    def __init__(self, context=None, client=doubao_client, systemp_template=default_systemp_template, userp_template=default_userp_template, output_schema=None, default_input=None, max_retries=3, name=None, stream=False, model="doubao_1.6_pro", extra_args=None):
+    def __init__(self, context=None, client=default_llm_client, systemp_template=default_systemp_template, userp_template=default_userp_template, output_schema=None, default_input=None, max_retries=3, name=None, stream=False, model="doubao_1.6_pro", extra_args=None):
         super().__init__(context, client, systemp_template, userp_template, output_schema, default_input, max_retries, name, stream, model, extra_args)
 
     def _posthandle(self):

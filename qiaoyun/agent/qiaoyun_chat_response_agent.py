@@ -13,9 +13,8 @@ logger = getLogger(__name__)
 import random
 
 from framework.agent.base_agent import AgentStatus
-from framework.agent.llmagent.doubao_llmagent import DouBaoLLMAgent
+from framework.agent.llmagent.luoyun_llmagent import LuoyunLLMAgent, default_llm_client
 from conf.config import CONF
-from volcenginesdkarkruntime import Ark
 
 from qiaoyun.prompt.system_prompt import *
 from qiaoyun.prompt.chat_taskprompt import *
@@ -24,12 +23,7 @@ from qiaoyun.prompt.chat_noticeprompt import *
 
 from util.time_util import str2timestamp
 
-doubao_client = Ark(
-    base_url="https://ark.cn-beijing.volces.com/api/v3",
-)
-
-# 需要 export ARK_API_KEY="xxxx"
-class QiaoyunChatResponseAgent(DouBaoLLMAgent):
+class QiaoyunChatResponseAgent(LuoyunLLMAgent):
     default_systemp_template = SYSTEMPROMPT_小说越狱
 
     default_userp_template = \
@@ -144,7 +138,7 @@ class QiaoyunChatResponseAgent(DouBaoLLMAgent):
         }
     }
 
-    def __init__(self, context=None, client=doubao_client, systemp_template=default_systemp_template, userp_template=default_userp_template, output_schema=default_output_schema, default_input=None, max_retries=3, name=None, stream=False, model="doubao_1.5_pro", extra_args=None):
+    def __init__(self, context=None, client=default_llm_client, systemp_template=default_systemp_template, userp_template=default_userp_template, output_schema=default_output_schema, default_input=None, max_retries=3, name=None, stream=False, model="doubao_1.5_pro", extra_args=None):
         super().__init__(context, client, systemp_template, userp_template, output_schema, default_input, max_retries, name, stream, model, extra_args)
 
     def _posthandle(self):
